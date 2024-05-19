@@ -54,8 +54,6 @@ void PlaceBottomWalls(std::vector<Tile>& row) {
 	}
 }
 void InitializeVector(unsigned int rows, unsigned int cols) {
-	//if (maze != nullptr)
-	//	delete maze;
 	maze = new std::vector<std::vector<Tile>>(rows);
 	for (int i = 0; i < rows; i++) {
 		(*maze)[i] = std::vector<Tile>(cols);
