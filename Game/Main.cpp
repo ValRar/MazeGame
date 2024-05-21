@@ -12,13 +12,6 @@
 #include "Player.hpp"
 using namespace ftxui;
 
-// This is a helper function to create a button with a custom style.
-// The style is defined by a lambda function that takes an EntryState and
-// returns an Element.
-// We are using `center` to center the text inside the button, then `border` to
-// add a border around the button, and finally `flex` to make the button fill
-// the available space.
-
 const int blockWidth = 5, fullWidth = blockWidth + 1;
 
 
@@ -39,44 +32,67 @@ Canvas* renderMaze(std::vector<std::vector<Maze::Tile>>* mazePtr) {
 	}
 	return c;
 }
+void renderMarker(Canvas* canvas, Point<int>& point, Color color) {
+	canvas->DrawPointCircleFilled(point.x * fullWidth + fullWidth / 2, point.y * fullWidth + fullWidth / 2, 2, color);
+}
 
-Player player(0, 0);
-
-Canvas DrawPlayer(Canvas c, double row, double column) {
-	c.DrawBlockCircleFilled(column * fullWidth + fullWidth / 2, row * fullWidth + fullWidth / 2, 1);
+Canvas DrawPlayer(Canvas c, Point<double>& point) {
+	c.DrawBlockCircleFilled(point.x * fullWidth + fullWidth / 2, point.y * fullWidth + fullWidth / 2, 1);
 	return std::move(c);
 }
 
-int main() {
-	int rows = 20, columns = 20;
-	srand(time(0));
+bool isPlayerWon(Player* player, Point<int>& mazeEnd) {
+	return floor(player->GetCurrentX()) == mazeEnd.x && floor(player->GetCurrentY()) == mazeEnd.y;
+}
+
+void GameLoop() {
+	int score = 0;
+	int rows = 5, columns = 5;
+	Point<int> startPoint(0, rand() % rows), endPoint(columns - 1, rand() % rows);
 	auto maze = std::unique_ptr<std::vector<std::vector<Maze::Tile>>>(Maze::GenerateMaze(rows, columns, 2, 2));
-	auto c = renderMaze(maze.get());
+	auto c = std::unique_ptr<Canvas>(renderMaze(maze.get()));
+	renderMarker(c.get(), endPoint, Color::Green);
+	auto player = std::make_unique<Player>(Player(startPoint.x, startPoint.y));
 	auto renderer = Renderer([&] {
-		auto c1 = DrawPlayer(*c, player.GetCurrentY(), player.GetCurrentX());
-		return canvas(c1);
+		auto playerPoint = player->GetCurrentPoint();
+		auto cWithPlayer = DrawPlayer(*c, playerPoint);
+		return hbox({ canvas(cWithPlayer), text("Score: " + std::to_string(score)) });
 		});
 	renderer |= CatchEvent([&](Event e) {
-		int x = player.GetTargetX();
-		int y = player.GetTargetY();
+		int x = player->GetTargetX();
+		int y = player->GetTargetY();
 		if (e == e.ArrowRight && x < columns - 1 && !(*maze)[y][x].RightWall)
-			player.Move(1, 0);
+			player->Move(1, 0);
 		else if (e == e.ArrowLeft && x > 0 && !(*maze)[y][x - 1].RightWall)
-			player.Move(-1, 0);
+			player->Move(-1, 0);
 		else if (e == e.ArrowDown && y < rows - 1 && !(*maze)[y][x].BottomWall)
-			player.Move(0, 1);
+			player->Move(0, 1);
 		else if (e == e.ArrowUp && y > 0 && !(*maze)[y - 1][x].BottomWall)
-			player.Move(0, -1);
+			player->Move(0, -1);
 		return false;
 		});
 	auto screen = ScreenInteractive::FitComponent();
 	std::thread renderCallingThread([&] {
 		while (true)
 		{
+			if (isPlayerWon(player.get(), endPoint)) {
+				maze = std::unique_ptr<std::vector<std::vector<Maze::Tile>>>(Maze::GenerateMaze(rows, columns, 2, 2));
+				c = std::unique_ptr<Canvas>(renderMaze(maze.get()));
+				endPoint = Point<int>(columns - 1, rand() % rows);
+				startPoint = Point<int>(0, rand() % rows);
+				player = std::make_unique<Player>(Player(startPoint.x, startPoint.y));
+				renderMarker(c.get(), endPoint, Color::Green);
+				score++;
+			}
 			screen.PostEvent(Event::Custom);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		});
 	screen.Loop(renderer);
+}
+
+int main() {
+	srand(time(0));
+	GameLoop();
 	return 0;
 }

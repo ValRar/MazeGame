@@ -1,5 +1,11 @@
 #pragma once
 #include <chrono>
+template <typename T>
+struct Point {
+	T x, y;
+	Point() : x{ 0 }, y{ 0 } {}
+	Point(T x, T y) : x{ x }, y{ y } {}
+};
 
 class Player {
 private:
@@ -51,5 +57,11 @@ public:
 	}
 	double GetTargetY() {
 		return targetY;
+	}
+	Point<int> GetTargetPoint() {
+		return std::move(Point<int>(targetX, targetY));
+	}
+	Point<double> GetCurrentPoint() {
+		return std::move(Point<double>(GetCurrentX(), GetCurrentY()));
 	}
 };
