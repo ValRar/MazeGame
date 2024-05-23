@@ -10,14 +10,16 @@
 #include "ftxui/dom/elements.hpp"  // for separator, gauge, text, Element, operator|, vbox, border
 #include "MazeGenerator.h"
 #include "Player.hpp"
+#include "Timer.hpp"
 using namespace ftxui;
 
 const int blockWidth = 5, fullWidth = blockWidth + 1;
+bool showGameComponents = false;
 
 
 Canvas* renderMaze(std::vector<std::vector<Maze::Tile>>* mazePtr) {
 	int rows = mazePtr->size(), columns = (*mazePtr)[0].size();
-	Canvas* c = new Canvas((rows + 1) * fullWidth, (columns + 1) * fullWidth);
+	Canvas* c = new Canvas(columns * fullWidth + 2, rows * fullWidth + 4);
 	c->DrawPointLine(0, 0, 0, rows * fullWidth);
 	c->DrawPointLine(0, 0, columns * fullWidth, 0);
 	c->DrawPointLine(columns * fullWidth, 0, columns * fullWidth, rows * fullWidth);
@@ -33,7 +35,7 @@ Canvas* renderMaze(std::vector<std::vector<Maze::Tile>>* mazePtr) {
 	return c;
 }
 void renderMarker(Canvas* canvas, Point<int>& point, Color color) {
-	canvas->DrawPointCircleFilled(point.x * fullWidth + fullWidth / 2, point.y * fullWidth + fullWidth / 2, 2, color);
+	canvas->DrawPointCircleFilled(point.x * fullWidth + fullWidth / 2, point.y * fullWidth + fullWidth / 2, 1, color);
 }
 
 Canvas DrawPlayer(Canvas c, Point<double>& point) {
@@ -47,7 +49,8 @@ bool isPlayerWon(Player* player, Point<int>& mazeEnd) {
 
 void GameLoop() {
 	int score = 0;
-	int rows = 5, columns = 5;
+	int rows = 20, columns = 20;
+	Timer mazeTimer, totalTimer;
 	Point<int> startPoint(0, rand() % rows), endPoint(columns - 1, rand() % rows);
 	auto maze = std::unique_ptr<std::vector<std::vector<Maze::Tile>>>(Maze::GenerateMaze(rows, columns, 2, 2));
 	auto c = std::unique_ptr<Canvas>(renderMaze(maze.get()));
@@ -56,7 +59,12 @@ void GameLoop() {
 	auto renderer = Renderer([&] {
 		auto playerPoint = player->GetCurrentPoint();
 		auto cWithPlayer = DrawPlayer(*c, playerPoint);
-		return hbox({ canvas(cWithPlayer), text("Score: " + std::to_string(score)) });
+		return hbox({ canvas(cWithPlayer) | border, vbox({
+					text("Score: " + std::to_string(score)),
+					text("Current level time: " + mazeTimer.GetFormattedString()),
+					text("Total time: " + totalTimer.GetFormattedString())
+				}) | border
+			}) | border;
 		});
 	renderer |= CatchEvent([&](Event e) {
 		int x = player->GetTargetX();
@@ -83,6 +91,7 @@ void GameLoop() {
 				player = std::make_unique<Player>(Player(startPoint.x, startPoint.y));
 				renderMarker(c.get(), endPoint, Color::Green);
 				score++;
+				mazeTimer.Reset();
 			}
 			screen.PostEvent(Event::Custom);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -25,7 +25,7 @@ if(NOT ftxui_POPULATED)
 endif()
 
 # Включите подпроекты.
-add_executable(Executable "Game/Main.cpp" "Game/Player.hpp")
+add_executable(Executable "Game/Main.cpp" "Game/Player.hpp" "Game/Timer.hpp")
 add_subdirectory(MazeGenerator)
 target_compile_features(Executable PRIVATE cxx_std_17)
 target_include_directories(Executable PRIVATE ftxui MazeGenerator)
