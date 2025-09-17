@@ -3,7 +3,7 @@
 // the LICENSE file.
 #include <memory>  // for shared_ptr, __shared_ptr_access
 #include <string>  // for operator+, to_string
-#include <Windows.h>
+#include <math.h>
 
 #include "ftxui/component/component.hpp"  // for Button, Horizontal, Renderer
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
@@ -102,8 +102,6 @@ void GameLoop() {
 }
 
 int main() {
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
 	srand(time(0));
 	GameLoop();
 	return 0;

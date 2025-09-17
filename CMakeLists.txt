@@ -9,7 +9,10 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("MazeGame")
+project ("MazeGame" LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
@@ -27,6 +30,5 @@ endif()
 # Включите подпроекты.
 add_executable(Executable "Game/Main.cpp" "Game/Player.hpp" "Game/Timer.hpp")
 add_subdirectory(MazeGenerator)
-target_compile_features(Executable PRIVATE cxx_std_17)
 target_include_directories(Executable PRIVATE ftxui MazeGenerator)
-target_link_libraries(Executable PRIVATE ftxui::component ftxui::dom ftxui::screen MazeGenerator)
+target_link_libraries(Executable PRIVATE ftxui::component ftxui::screen ftxui::dom MazeGenerator)

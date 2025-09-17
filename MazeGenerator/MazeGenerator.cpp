@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <cstdint>
 #include "MazeGenerator.h"
 
 using namespace Maze;

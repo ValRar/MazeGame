@@ -21,5 +21,5 @@ public:
 	~Timer() {}
 
 private:
-	std::chrono::steady_clock::time_point startPoint;
+	std::chrono::high_resolution_clock::time_point startPoint;
 };
